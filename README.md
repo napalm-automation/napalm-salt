@@ -120,7 +120,7 @@ Few examples:
 Configuration enforcement for NTP peers (Example)
 =================================================
 
-In the SLS file of the device append the following lines:
+In the Pillar file of the device append the following lines:
 
 ```yaml
 ntp.peers:
