@@ -42,7 +42,7 @@ base:
     - core01_nrt01
 ```
 
-Then you need to add content in the device descriptor file ```[DEVICE_SLS_FILENAME].sls```:
+Then you need to add content in the device descriptor file ```[DEVICE_SLS_FILENAME].sls``` (called _Pillar_):
 
 ```yaml
 proxy:
@@ -58,7 +58,7 @@ where:
   - DRIVER is the driver to be used when connecting to the device. For the complete list of supported operating systems, please check the [NAPALM readthedocs page](http://napalm.readthedocs.org/en/latest/#supported-network-operating-systems)
   - HOSTNAME, USERNAME, PASSWORD are the connection details
 
-Example:
+Example ```core01_nrt01.sls```:
 
 ```yaml
 proxy:
@@ -116,3 +116,48 @@ Few examples:
 # salt core01.nrt01 net.commit
 # salt core01.nrt01 net.rollback
 ```
+
+Configuration enforcement for NTP peers (Example)
+=================================================
+
+In the SLS file of the device append the following lines:
+
+```yaml
+ntp.peers:
+  - [PEER1]
+  - [PEER2]
+  - ...
+```
+
+Example:
+
+```yaml
+ntp.peers:
+  - 192.168.0.1
+  - 172.17.17.1
+```
+
+In ```/etc/salt/states``` create a directory (say ```router``` for example). Inside this directory, create a file called ```init.sls```, having the following content:
+
+```
+include:
+  - .ntp
+```
+
+Inside the file ```ntp.sls``` add the following content:
+
+```yaml
+{% set ntp_peers = pillar.get('ntp.peers', {}) -%}
+
+cf_ntp:
+  netntp.managed:
+    - peers: {{ntp_peers}}
+```
+
+Now, when running the command below, Salt will check if on your device the NTP peers are setup as specified in the Pillar file. If not, will add the missing NTP peers and will remove the excess. Thus, at the end of the operation, the list of NTP peers configured on the device will match NTP peers listed in the Pillar.
+
+```bash
+# salt core01.nrt01 state.sls router.ntp
+```
+
+Salt can be also [instructed](https://docs.saltstack.com/en/latest/ref/states/all/salt.states.schedule.html#management-of-the-salt-scheduler) to constantly perform this operation and ensure the configuration on the device is consistent and up-to-date.
