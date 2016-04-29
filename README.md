@@ -75,20 +75,20 @@ Start the Salt master
 Issue the following command on the same server you just installed the Salt master:
 
 ```bash
-# systemctl start salt-master
+systemctl start salt-master
 ```
 
 Start the proxy minion for your device
 ======================================
 
 ```bash
-# systemctl start salt-proxy@[DEVICE_ID]
+systemctl start salt-proxy@[DEVICE_ID]
 ```
 
 Example:
 
 ```bash
-# systemctl start salt-proxy@edge01.nrt01
+systemctl start salt-proxy@edge01.nrt01
 ```
 
 Start using Salt
@@ -99,22 +99,27 @@ Everything is setup now, you need just to start issuing commands to retieve/set 
 Syntax:
 
 ```bash
-# salt [DEVICE_ID] [FUNCTION]
+salt [DEVICE_ID] [FUNCTION]
 ```
 
 For the updated list of functions, check the following resources:
   - [net](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_network.html#module-salt.modules.napalm_network) mdoule
   - [ntp](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_ntp.html#module-salt.modules.napalm_ntp) module
+  - [bgp](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_bgp.html#module-salt.modules.napalm_bgp) module
+  - [probes](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_probes.html#module-salt.modules.napalm_probes) module
 
 Few examples:
 
 ```bash
-# salt core01.nrt01 ntp.peers
-# salt core01.nrt01 net.arp
-# salt core01.nrt01 net.interfaces
-# salt core01.nrt01 ntp.set_peers 192.168.0.1 172.17.17.1 172.17.17.2
-# salt core01.nrt01 net.commit
-# salt core01.nrt01 net.rollback
+salt core01.nrt01 ntp.peers
+salt core01.nrt01 net.arp
+salt core01.nrt01 net.interfaces
+salt core01.nrt01 ntp.set_peers 192.168.0.1 172.17.17.1 172.17.17.2
+salt core01.nrt01 bgp.config  # returns the BGP configuration
+salt core01.nrt01 bgp.neighbors  # provides statistics regarding the BGP sessions
+salt core01.nrt01 probes.results
+salt core01.nrt01 net.commit
+salt core01.nrt01 net.rollback
 ```
 
 Configuration enforcement for NTP peers (Example)
@@ -157,7 +162,7 @@ cf_ntp:
 Now, when running the command below, Salt will check if on your device the NTP peers are setup as specified in the Pillar file. If not, will add the missing NTP peers and will remove the excess. Thus, at the end of the operation, the list of NTP peers configured on the device will match NTP peers listed in the Pillar.
 
 ```bash
-# salt core01.nrt01 state.sls router.ntp
+salt core01.nrt01 state.sls router.ntp
 ```
 
 Salt can be also [instructed](https://docs.saltstack.com/en/latest/ref/states/all/salt.states.schedule.html#management-of-the-salt-scheduler) to constantly perform this operation and ensure the configuration on the device is consistent and up-to-date.
