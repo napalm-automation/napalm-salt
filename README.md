@@ -7,18 +7,29 @@ Install Salt
 Install Salt using the [platform-specific instructions](https://docs.saltstack.com/en/latest/topics/installation/#platform-specific-installation-instructions) from the official Saltstack documentation.
 Be aware to install the master distribution, as on the local server will run as Master, controlling the devices as Proxy minions.
 
+Install NAPALM
+==============
+
+If NAPALM has never been installed on your system it will need to be before napalm-salt can work. The following steps are for an Ubuntu 16.04 installation:
+```
+sudo apt-get install libxml2-dev libxslt1-dev zlib1g-dev
+sudo -H pip install napalm
+```
+
 Install NAPALM Salt
 ===================
 
-Download the file __napalm.spm__ and unpack using the command: ```spm local install napalm.spm```
-
+Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```
+Extract the __napalm.spm__ file using the command: ```tar xf napalm.spm```
+The module can now be built using the Salt Package Manager (spm): ```spm build napalm```
+With the module built the final step is to install it with: ```sudo spm local install /srv/spm_build/napalm-*.spm```
 
 Configure Salt Master & Proxy
 =============================
 
-There are two configuration files needed to make Salt run as proxy-master: ```master``` and ```proxy```. The files provided as example will configure a default running evironment, for more specific options, please check the documentation or the comments inside!
+There are two configuration files needed to make Salt run as proxy-master: ```master``` and ```proxy```. The files provided as example will configure a default running environment used for the rest of this guide. Place the ```master``` and ```proxy``` files in ```/etc/salt/```. For more specific options, please check the documentation or the comments inside!
 
-Cofigure the connection with a device
+Configure the connection with a device
 ======================================
 
 In ```/etc/salt/pillar``` save a file called ```top.sls``` with the following content:
@@ -80,6 +91,21 @@ systemctl start salt-master
 
 Start the proxy minion for your device
 ======================================
+
+Start with testing proxy minion:
+```bash
+sudo salt-proxy --proxyid=[DEVICE_ID] -l debug
+```
+
+On the first connection attempt you will find the that minion cannot talk and is stuck with the following error message:
+```
+[ERROR   ] The Salt Master has cached the public key for this node, this salt minion will wait for 10 seconds before attempting to re-authenticate
+[INFO    ] Waiting 10 seconds before retry.
+```
+This is normal and is due to the salt key from the minion not being accepted by the master. Quit the minion with <kbd>CTRL</kbd>+<kbd>C</kbd> and run ```sudo salt-key```. Under ```Unaccepted Keys:``` you should see your ```[DEVICE_ID]```. Accept the key with ```sudo salt-key -a [DEVICE_ID]```. Now rerun the minion debug and you should see the minion connecting to your device.
+
+Running the proxy minion as a service
+=====================================
 
 ```bash
 systemctl start salt-proxy@[DEVICE_ID]
