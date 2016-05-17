@@ -29,6 +29,14 @@ Configure Salt Master & Proxy
 
 There are two configuration files needed to make Salt run as proxy-master: ```master``` and ```proxy```. The files provided as example will configure a default running environment used for the rest of this guide. Place the ```master``` and ```proxy``` files in ```/etc/salt/```. For more specific options, please check the documentation or the comments inside!
 
+*** NOTE: ***
+If you do not use the provided ```proxy``` file the following two options are required to be in the ```proxy``` file for the minion to work:
+
+```
+master: localhost
+multiprocessing: False
+```
+
 Configure the connection with a device
 ======================================
 
@@ -107,11 +115,37 @@ This is normal and is due to the salt key from the minion not being accepted by 
 Running the proxy minion as a service
 =====================================
 
+To configure the minion to run as a service create the file ```/etc/systemd/system/salt-proxy@.service``` with the following:
+
+```
+[Unit]
+Description=Salt proxy minion
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/salt-proxy -l debug --proxyid %I
+User=root
+Group=root
+Restart=always
+RestartPreventExitStatus=SIGHUP
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+Depending on how your salt master is installed the location of the ```salt-proxy``` binary may need to be changed. You can look up the location of the binary with the ```which salt-proxy``` command. Also the logging level is set to debug with the ```-l debug``` switch. This is useful for troubleshooting however you may want to remove this.
+
+Once the file is created and populated ```systemd``` will need to be reloaded with a ```systemctl daemon-reload``` to pick up the new unit. Do note that there may be an impact to reloading ```systemd``` so be careful.
+
+The minion can now be started with:
+
 ```bash
 systemctl start salt-proxy@[DEVICE_ID]
 ```
 
-Example:
+For example:
 
 ```bash
 systemctl start salt-proxy@edge01.nrt01
