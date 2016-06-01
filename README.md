@@ -19,8 +19,10 @@ sudo -H pip install napalm
 Install NAPALM Salt
 ===================
 
-Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```
+Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```.
+
 Extract the SPM archive using the command: ```tar xf napalm-2016.3.spm``` for Salt ```2016.3``` or ```tar xf napalm.spm``` for older releases. When unpacking a directory called ```napalm``` will be created.
+
 Copy all its files and directories to the path specified as ```file_roots``` in the master config file (default is ```/etc/salt/states```), e.g. ```cp -r napalm/* /etc/salt/states```.
 
 Configure Salt Master & Proxy
