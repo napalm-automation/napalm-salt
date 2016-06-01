@@ -25,6 +25,34 @@ Extract the SPM archive using the command: ```tar xf napalm-2016.3.spm``` for Sa
 
 Copy all its files and directories to the path specified as ```file_roots``` in the master config file (default is ```/etc/salt/states```), e.g. ```cp -r napalm/* /etc/salt/states```.
 
+At the end, you should have a directory structure similar to the following under the ```file_roots``` directory (e.g.: ```/etc/salt/states```):
+
+```
+/etc/salt/states
+├── top.sls
+├── _proxy
+|   └── napalm.py
+├── _modules
+|   ├── napalm_network.py
+|   ├── napalm_ntp.py
+|   ├── napalm_users.py
+|   ├── napalm_bgp.py
+|   └── napalm_probes.py
+├── _grains
+|   └── network_device.py
+├── _states
+|   ├── netntp.py
+|   ├── netusers.py
+|   └── probes.py
+├── _runners
+|   └── ntp.py
+├── router
+    ├── init.sls
+    ├── ntp.sls
+    ├── users.sls
+    └── probes.sls
+```
+
 Configure Salt Master & Proxy
 =============================
 
