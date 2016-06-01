@@ -20,9 +20,8 @@ Install NAPALM Salt
 ===================
 
 Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```
-Extract the __napalm.spm__ file using the command: ```tar xf napalm.spm```
-The module can now be built using the Salt Package Manager (spm): ```spm build napalm```
-With the module built the final step is to install it with: ```sudo spm local install /srv/spm_build/napalm-*.spm```
+Extract the SPM archive using the command: ```tar xf napalm-2016.3.spm``` for Salt ```2016.3``` or ```tar xf napalm.spm``` for older releases. When unpacking a directory called ```napalm``` will be created.
+Copy all its files and directories to the path specified as ```file_roots``` in the master config file (default is ```/etc/salt/states```), e.g. ```cp -r napalm/* /etc/salt/states```.
 
 Configure Salt Master & Proxy
 =============================
@@ -88,29 +87,53 @@ proxy:
   passwd: my_password
 ```
 
+*** NOTE: *** make sure the pillar is a valid YAML file!
+
+Also, double check if you can connect to the device from the server, using the credentials provided in the pillar.
+
+If the errors persist, run the following lines in a Python console and ask in the Slack channel [#saltstack](https://networktocode.slack.com/messages/saltstack/) in [network.toCode()](https://networktocode.herokuapp.com/):
+
+```python
+>>> from napalm_base import get_network_driver
+>>> d = get_network_driver('DRIVER')
+>>> e = d('HOSTNAME', 'USERNAME', 'PASSWORD', optional_args={'config_lock': False})
+>>> e.open()
+>>> e.get_facts()
+>>> e.close()
+```
+
+Running the master as a service
+==============================
+
+To configure the Salt master to run as a service and be easier to manage the process state, create the file ```/etc/systemd/system/salt-master.service``` with the following content:
+
+```
+[Unit]
+Description=Salt Master
+Requires=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/salt-master.pid
+ExecStart=/usr/local/salt/virtualenv/bin/salt-master -d
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+```
+
 Start the Salt master
 =======================
-
-Issue the following command on the same server you just installed the Salt master:
 
 ```bash
 systemctl start salt-master
 ```
 
-Start the proxy minion for your device
-======================================
+Depending on how your salt master is installed the location of the ```salt-master``` binary may need to be changed. You can look up the location of the binary with the ```which salt-master``` command.
 
-Start with testing proxy minion:
-```bash
-sudo salt-proxy --proxyid=[DEVICE_ID] -l debug
-```
-
-On the first connection attempt you will find the that minion cannot talk and is stuck with the following error message:
-```
-[ERROR   ] The Salt Master has cached the public key for this node, this salt minion will wait for 10 seconds before attempting to re-authenticate
-[INFO    ] Waiting 10 seconds before retry.
-```
-This is normal and is due to the salt key from the minion not being accepted by the master. Quit the minion with <kbd>CTRL</kbd>+<kbd>C</kbd> and run ```sudo salt-key```. Under ```Unaccepted Keys:``` you should see your ```[DEVICE_ID]```. Accept the key with ```sudo salt-key -a [DEVICE_ID]```. Now rerun the minion debug and you should see the minion connecting to your device.
+Once the file is created and populated ```systemd``` will need to be reloaded with a ```systemctl daemon-reload``` to pick up the new unit. Do note that there may be an impact to reloading ```systemd``` so be careful.
 
 Running the proxy minion as a service
 =====================================
@@ -139,17 +162,22 @@ Depending on how your salt master is installed the location of the ```salt-proxy
 
 Once the file is created and populated ```systemd``` will need to be reloaded with a ```systemctl daemon-reload``` to pick up the new unit. Do note that there may be an impact to reloading ```systemd``` so be careful.
 
-The minion can now be started with:
 
+Start the proxy minion for your device
+======================================
+
+Start with testing proxy minion:
 ```bash
-systemctl start salt-proxy@[DEVICE_ID]
+sudo salt-proxy --proxyid=[DEVICE_ID] -l debug
 ```
 
-For example:
-
-```bash
-systemctl start salt-proxy@edge01.nrt01
+On the first connection attempt you will find the that minion cannot talk and is stuck with the following error message:
 ```
+[ERROR   ] The Salt Master has cached the public key for this node, this salt minion will wait for 10 seconds before attempting to re-authenticate
+[INFO    ] Waiting 10 seconds before retry.
+```
+This is normal and is due to the salt key from the minion not being accepted by the master. Quit the minion with <kbd>CTRL</kbd>+<kbd>C</kbd> and run ```sudo salt-key```. Under ```Unaccepted Keys:``` you should see your ```[DEVICE_ID]```. Accept the key with ```sudo salt-key -a [DEVICE_ID]```. Now rerun the minion debug and you should see the minion connecting to your device.
+
 
 Start using Salt
 ================
@@ -171,12 +199,16 @@ For the updated list of functions, check the following resources:
 Few examples:
 
 ```bash
-salt core01.nrt01 ntp.peers
 salt core01.nrt01 net.arp
+salt core01.nrt01 net.mac
+salt core01.nrt01 net.lldp
+salt core01.nrt01 net.ipaddrs
 salt core01.nrt01 net.interfaces
+salt core01.nrt01 ntp.peers
 salt core01.nrt01 ntp.set_peers 192.168.0.1 172.17.17.1 172.17.17.2
 salt core01.nrt01 bgp.config  # returns the BGP configuration
 salt core01.nrt01 bgp.neighbors  # provides statistics regarding the BGP sessions
+salt core01.nrt01 probes.config
 salt core01.nrt01 probes.results
 salt core01.nrt01 net.commit
 salt core01.nrt01 net.rollback
@@ -200,23 +232,6 @@ Example:
 ntp.peers:
   - 192.168.0.1
   - 172.17.17.1
-```
-
-In ```/etc/salt/states``` create a directory (say ```router``` for example). Inside this directory, create a file called ```init.sls```, having the following content:
-
-```
-include:
-  - .ntp
-```
-
-Inside the file ```ntp.sls``` add the following content:
-
-```yaml
-{% set ntp_peers = pillar.get('ntp.peers', {}) -%}
-
-cf_ntp:
-  netntp.managed:
-    - peers: {{ntp_peers}}
 ```
 
 Now, when running the command below, Salt will check if on your device the NTP peers are setup as specified in the Pillar file. If not, will add the missing NTP peers and will remove the excess. Thus, at the end of the operation, the list of NTP peers configured on the device will match NTP peers listed in the Pillar.
