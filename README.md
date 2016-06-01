@@ -88,8 +88,10 @@ proxy:
 ```
 
 *** NOTE: *** make sure the pillar is a valid YAML file!
+
 Also, double check if you can connect to the device from the server, using the credentials provided in the pillar.
-If the errors persist, run the following lines in a Python console and ask in the Slack channel #[saltstack](https://networktocode.slack.com/messages/saltstack/) in [network.toCode()](https://networktocode.herokuapp.com/):
+
+If the errors persist, run the following lines in a Python console and ask in the Slack channel [#saltstack](https://networktocode.slack.com/messages/saltstack/) in [network.toCode()](https://networktocode.herokuapp.com/):
 
 ```python
 >>> from napalm_base import get_network_driver
