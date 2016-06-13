@@ -103,7 +103,7 @@ proxy:
 
 where:
 
-  - DRIVER is the driver to be used when connecting to the device. For the complete list of supported operating systems, please check the [NAPALM readthedocs page](http://napalm.readthedocs.org/en/latest/#supported-network-operating-systems)
+  - DRIVER is the driver to be used when connecting to the device. For the complete list of supported operating systems, please check the [NAPALM readthedocs page](https://napalm.readthedocs.io/en/latest/#supported-network-operating-systems)
   - HOSTNAME, USERNAME, PASSWORD are the connection details
 
 Example ```core01_nrt01.sls```:
