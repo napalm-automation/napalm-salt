@@ -231,6 +231,12 @@ It should return `True` if there are no problems.  If everything checks out, hit
 ```
 sudo salt-proxy --proxyid=[DEVICE_ID] -d
 ```
+Finally, sync your packages:
+```
+sudo salt core01.nrt01 saltutil.sync_all
+```
+As before, where 'core01.nrt01' is your DEVICE_ID.
+
 
 Start using Salt
 ================
