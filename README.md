@@ -5,7 +5,7 @@ Install Salt
 ============
 
 Install Salt using the [platform-specific instructions](https://docs.saltstack.com/en/latest/topics/installation/#platform-specific-installation-instructions) from the official Saltstack documentation.
-Be aware to install the master distribution, as on the local server will run as Master, controlling the devices as Proxy minions.
+Be aware to install the master distribution **from the PPA repo**, as on the local server will run as Master, controlling the devices as Proxy minions.
 
 Install NAPALM
 ==============
@@ -69,7 +69,7 @@ multiprocessing: False
 Configure the connection with a device
 ======================================
 
-In ```/etc/salt/pillar``` save a file called ```top.sls``` with the following content:
+In ```/etc/salt/pillar/``` save a file called ```top.sls``` with the following content:
 
 ```yaml
 base:
@@ -89,6 +89,11 @@ base:
   core01.nrt01:
     - core01_nrt01
 ```
+
+where:
+
+  - core01.nrt01 is the name used to interact with the device, `salt 'core01.nrt01' test.ping`
+  - ```/etc/salt/pillar/core01_nrt01.sls``` is the file containing the specifications of this device
 
 Then you need to add content in the device descriptor file ```[DEVICE_SLS_FILENAME].sls``` (called _Pillar_):
 
@@ -146,6 +151,7 @@ After=network.target
 [Service]
 Type=forking
 PIDFile=/var/run/salt-master.pid
+# ***NOTE*** the virtualenv here!  Your location may vary!
 ExecStart=/usr/local/salt/virtualenv/bin/salt-master -d
 Restart=on-failure
 RestartSec=15
@@ -161,7 +167,7 @@ Start the Salt master
 systemctl start salt-master
 ```
 
-Depending on how your salt master is installed the location of the ```salt-master``` binary may need to be changed. You can look up the location of the binary with the ```which salt-master``` command.
+Depending on how your salt master is installed the location of the ```salt-master``` binary may need to be changed (the default location is a virtualenv). You should check the location of the binary with the ```which salt-master``` command.
 
 Once the file is created and populated ```systemd``` will need to be reloaded with a ```systemctl daemon-reload``` to pick up the new unit. Do note that there may be an impact to reloading ```systemd``` so be careful.
 
@@ -208,6 +214,23 @@ On the first connection attempt you will find the that minion cannot talk and is
 ```
 This is normal and is due to the salt key from the minion not being accepted by the master. Quit the minion with <kbd>CTRL</kbd>+<kbd>C</kbd> and run ```sudo salt-key```. Under ```Unaccepted Keys:``` you should see your ```[DEVICE_ID]```. Accept the key with ```sudo salt-key -a [DEVICE_ID]```. Now rerun the minion debug and you should see the minion connecting to your device.
 
+
+Test your configuration
+=======================
+
+Once the key has been accepted, restart the proxy in debug mode and start a separate terminal session.  In your new terminal, issue the following command:
+```
+sudo salt 'core01.nrt01' test.ping
+```
+Substitute your DEVICE_ID for 'core01.nrt01'.  Output:
+```
+core01.nrt01:
+    True
+```
+It should return `True` if there are no problems.  If everything checks out, hit <kbd>CTRL</kbd>+<kbd>C</kbd> and restart salt-proxy as a daemon.
+```
+sudo salt-proxy --proxyid=[DEVICE_ID] -d
+```
 
 Start using Salt
 ================
