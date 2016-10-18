@@ -231,6 +231,10 @@ It should return `True` if there are no problems.  If everything checks out, hit
 ```
 sudo salt-proxy --proxyid=[DEVICE_ID] -d
 ```
+Finally, sync your packages:
+```
+sudo salt router1 saltutil.sync_all
+```
 
 Start using Salt
 ================
