@@ -2,3 +2,10 @@ master: localhost
 pki_dir: /etc/salt/pki/proxy
 cachedir: /var/cache/salt/proxy
 multiprocessing: False
+
+# to have mines with proxies, must add another config:
+# mine_enabled
+# ! new in 2016.3
+# see: https://github.com/saltstack/salt/issues/32022
+mine_enabled: True
+
