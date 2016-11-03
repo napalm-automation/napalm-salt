@@ -21,7 +21,7 @@ Install NAPALM Salt
 
 Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```.
 
-Extract the SPM archive using the command: ```tar xf napalm-2016.3.spm``` for Salt ```2016.3``` or ```tar xf napalm.spm``` for older releases. When unpacking a directory called ```napalm``` will be created.
+Extract the SPM archive using the command: ```tar xf napalm-2016.3.spm``` or ```tar xf napalm-2016.11.spm``` for Salt ```>=2016.3``` or ```tar xf napalm.spm``` for older releases. When unpacking, a directory called ```napalm``` will be created.
 
 Copy all its files and directories to the path specified as ```file_roots``` in the master config file (default is ```/etc/salt/states```), e.g. ```cp -r napalm/* /etc/salt/states```.
 
@@ -37,12 +37,15 @@ At the end, you should have a directory structure similar to the following under
 |   ├── napalm_ntp.py
 |   ├── napalm_users.py
 |   ├── napalm_bgp.py
+|   ├── napalm_route.py
+|   ├── napalm_snmp.py
 |   └── napalm_probes.py
 ├── _grains
-|   └── network_device.py
+|   └── napalm.py
 ├── _states
 |   ├── netntp.py
 |   ├── netusers.py
+|   ├── netsnmp.py
 |   └── probes.py
 ├── _runners
 |   └── ntp.py
@@ -50,6 +53,7 @@ At the end, you should have a directory structure similar to the following under
     ├── init.sls
     ├── ntp.sls
     ├── users.sls
+    ├── snmp.sls
     └── probes.sls
 ```
 
@@ -253,6 +257,9 @@ For the updated list of functions, check the following resources:
   - [net](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_network.html#module-salt.modules.napalm_network) mdoule
   - [ntp](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_ntp.html#module-salt.modules.napalm_ntp) module
   - [bgp](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_bgp.html#module-salt.modules.napalm_bgp) module
+  - [snmp](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_snmp.html#module-salt.modules.napalm_snmp) module
+  - [route](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_route.html#module-salt.modules.napalm_route) module
+  - [users](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_users.html#module-salt.modules.napalm_users) module
   - [probes](https://docs.saltstack.com/en/develop/ref/modules/all/salt.modules.napalm_probes.html#module-salt.modules.napalm_probes) module
 
 Few examples:
@@ -267,11 +274,25 @@ salt core01.nrt01 ntp.peers
 salt core01.nrt01 ntp.set_peers 192.168.0.1 172.17.17.1 172.17.17.2
 salt core01.nrt01 bgp.config  # returns the BGP configuration
 salt core01.nrt01 bgp.neighbors  # provides statistics regarding the BGP sessions
+salt core01.nrt01 snmp.config
+salt core01.nrt01 route.show 1.2.3.4/24 bgp
 salt core01.nrt01 probes.config
 salt core01.nrt01 probes.results
 salt core01.nrt01 net.commit
 salt core01.nrt01 net.rollback
 ```
+
+Configuration enforcement
+=========================
+
+To assure consistency across your network, [states](https://docs.saltstack.com/en/latest/topics/tutorials/starting_states.html) are your friend. To use a state is quite straight forwards when the module is already provided (examples in the next sections, for example [NTP](https://github.com/napalm-automation/napalm-salt#configuration-enforcement-for-ntp-peers-example)).
+There are a couple of states already available, for:
+
+  - [NTP](https://docs.saltstack.com/en/develop/ref/states/all/salt.states.netntp.html)
+  - [SNMP](https://docs.saltstack.com/en/develop/ref/states/all/salt.states.netsnmp.html)
+  - [Users](https://docs.saltstack.com/en/develop/ref/states/all/salt.states.netusers.html)
+  - [Probes](https://docs.saltstack.com/en/develop/ref/states/all/salt.states.netntp.html)
+
 
 Configuration enforcement for NTP peers (Example)
 =================================================
@@ -299,4 +320,65 @@ Now, when running the command below, Salt will check if on your device the NTP p
 salt core01.nrt01 state.sls router.ntp
 ```
 
-Salt can be also [instructed](https://docs.saltstack.com/en/latest/ref/states/all/salt.states.schedule.html#management-of-the-salt-scheduler) to constantly perform this operation and ensure the configuration on the device is consistent and up-to-date.
+Configuration enforcement for SNMP (Example)
+============================================
+
+In the fillar file of the device append the following lines:
+
+```yaml
+snmp.config:
+  contact: <email addr>
+  location: <location>
+  community: <community name>
+```
+
+Example:
+
+```yaml
+snmp.config:
+  contact: noc@yourcompany.com
+  location: San Jose, CA, US
+  community: super-safe
+```
+
+Executing the state as following, will update the SNMP configuration on your device:
+
+```bash
+salt core01.nrt01 state.sls router.snmp
+```
+
+Scheduled states: maintaining configuration updated
+===================================================
+
+Using the capabilities of the states and [the schedulers](https://docs.saltstack.com/en/latest/ref/states/all/salt.states.schedule.html#management-of-the-salt-scheduler) you can ensure the configuration on the device is consistent and up-to-date.
+
+Yes, you don't need to jump in a box and manualluy execute a command or add aliases etc. 5 lines of config is all you need to write:
+
+Example:
+
+In the master config file:
+
+```yaml
+schedule:
+  ntp_config:
+    function: state.sls
+    args: router.ntp
+    returner: smtp
+    days: 1
+```
+
+Where:
+
+- ```ntp_config``` is just the name of the scheduled job - can be anything
+- ```function``` - this is how tell Salt that a state will be executed
+- ```args``` - specify the name of the state
+- ```returner``` (optional) - you can forward the output of the state to a different service. In this case SNMP - will send an email to a specific address with the summary of the state. There are [many other returners available](https://docs.saltstack.com/en/latest/ref/returners/#full-list-of-returners)
+- ```days``` - how often to check & update the config. Other options are: ```seconds```, ```minutes```, ```hours``` etc...
+
+
+Other modules:
+==============
+
+Salt comes with many flavours of modules - complete reference at [https://docs.saltstack.com/en/latest/ref/index.html](https://docs.saltstack.com/en/latest/ref/index.html).
+
+There are few other features, such [reactor](https://docs.saltstack.com/en/latest/topics/reactor/). The reactor system allows you to execute commands after an event happened, based on its output.
