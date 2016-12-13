@@ -323,7 +323,7 @@ salt core01.nrt01 state.sls router.ntp
 Configuration enforcement for SNMP (Example)
 ============================================
 
-In the fillar file of the device append the following lines:
+In the pillar file of the device append the following lines:
 
 ```yaml
 snmp.config:
