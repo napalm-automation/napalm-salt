@@ -1,6 +1,11 @@
 # napalm-salt
 Modules for Salt, to retrieve, control, enforce and update configuration of network devices
 
+Salt Basics
+===========
+
+New to Salt? Check out [this document](https://docs.saltstack.com/en/latest/topics/tutorials/walkthrough.html) for a brief introduction to get up to speed on the basics.
+
 Install Salt
 ============
 
