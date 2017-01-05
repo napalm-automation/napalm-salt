@@ -12,6 +12,8 @@ Install Salt
 Install Salt using the [platform-specific instructions](https://docs.saltstack.com/en/latest/topics/installation/#platform-specific-installation-instructions) from the official Saltstack documentation.
 Be aware to install the master distribution **from the PPA repo**, as on the local server will run as Master, controlling the devices as Proxy minions.
 
+CentOS documentation can be found [here](centos_installation.md).
+
 Install NAPALM
 ==============
 
