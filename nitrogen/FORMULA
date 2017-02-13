@@ -1,0 +1,8 @@
+name: napalm
+os: RedHat, Debian, Ubuntu, Suse, FreeBSD
+os_family: RedHat, Debian, Suse, FreeBSD
+version: Nitrogen
+release: 2
+summary: Proxy, modules, and states for controlling network devices via NAPALM
+description: Proxy, modules, and states for controlling network hardware via NAPALM.
+
