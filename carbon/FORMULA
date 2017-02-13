@@ -2,7 +2,7 @@ name: napalm
 os: RedHat, Debian, Ubuntu, Suse, FreeBSD
 os_family: RedHat, Debian, Suse, FreeBSD
 version: 201611
-release: 3
+release: 5
 summary: Proxy, modules, and states for controlling network devices via NAPALM
 description: Proxy, modules, and states for controlling network hardware via NAPALM.
 
