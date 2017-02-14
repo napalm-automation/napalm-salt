@@ -1,0 +1,15 @@
+[Unit]
+Description=Salt proxy minion
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/salt-proxy --proxyid %I
+User=root
+Group=root
+Restart=always
+RestartPreventExitStatus=SIGHUP
+RestartSec=5
+
+[Install]
+WantedBy=default.target
