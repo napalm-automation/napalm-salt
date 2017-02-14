@@ -9,3 +9,7 @@ multiprocessing: False
 # see: https://github.com/saltstack/salt/issues/32022
 mine_enabled: True
 
+schedule:
+  napalm_keepalive:
+    function: napalm_proxy.reconnect
+    minutes: 1
