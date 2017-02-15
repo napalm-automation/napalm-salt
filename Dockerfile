@@ -4,26 +4,26 @@ MAINTAINER mircea@cloudflare.com
 
 WORKDIR /etc
 
-# Install min deps
+## Install min deps
 RUN apt-get update \
   && apt-get install -y apt-utils \
   && apt-get install -y wget \
   && rm -rf /var/lib/apt/lists/*
 
-## Setup sources for Salt backports and official repo
+## Setup sources for Jessie backports and SaltStack repo
 RUN echo 'deb http://httpredir.debian.org/debian jessie-backports main' >> /etc/apt/sources.list \
-    && echo 'deb http://httpredir.debian.org/debian stretch main' >> /etc/apt/sources.list \
     && echo 'deb http://repo.saltstack.com/apt/debian/8/amd64/latest jessie main' >> /etc/apt/sources.list.d/saltstack.list \
     && wget -O - https://repo.saltstack.com/apt/debian/8/amd64/latest/SALTSTACK-GPG-KEY.pub | apt-key add - \
     && apt-get update
 
-## Install Salt backports
-RUN apt-get install -y --force-yes python-zmq python-systemd/jessie-backports python-tornado/jessie-backports salt-common/stretch \
+## Install backports
+RUN apt-get install -y --force-yes python-zmq python-systemd/jessie-backports python-tornado/jessie-backports
 
 ## Install Salt packages
+## salt-proxy is already included in salt-minion when installing from the SaltStack repos
+## if installing from the official Debian, salt-proxy must be install as a separate package
 RUN apt-get install -y --force-yes salt-master \
-    && apt-get install -y --force-yes salt-minion \
-    && apt-get install -y --force-yes salt-proxy
+    && apt-get install -y --force-yes salt-minion
 
 ## Creating Salt pillar_roots and file_roots directories
 RUN mkdir /etc/salt/pillar \
