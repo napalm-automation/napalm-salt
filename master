@@ -255,6 +255,7 @@ file_roots:
     - /etc/salt/states
     - /etc/salt/reactors
     - /etc/salt/templates
+    - /etc/salt/extmods
 
 # The hash_type is the hash to use when discovering the hash of a file on
 # the master server, the default is md5, but sha1, sha224, sha256, sha384
@@ -468,7 +469,3 @@ pillar_roots:
 # each of Salt's module types such as "runners", "output", "wheel", "modules",
 # "states", "returners", etc.
 # Like 'extension_modules' but can take an array of paths
-
-module_dirs:
-  - /etc/salt/extmods
-
