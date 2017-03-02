@@ -100,7 +100,7 @@ def execute(tgt,
                          fun,
                          arg=arg,
                          timeout=timeout or __opts__['timeout'],
-                         tgt_type=tgt_type,  # no warn_until, as this is introduced only in Nitrogen
+                         expr_form=tgt_type,  # no warn_until, as this is introduced only in Nitrogen
                          ret=ret,
                          jid=jid,
                          kwarg=kwarg,
