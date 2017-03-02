@@ -120,6 +120,11 @@ def reconnect(force=False):
             **{
             }
         )
+        return {
+            'out': None,
+            'result': False,
+            'comment': 'Connection restarted.'
+        }
     # otherwise, I have nothing to do here:
     return {
         'out': None,
