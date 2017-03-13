@@ -2,6 +2,6 @@
 {% set device_snmp = pillar.get('snmp.config', {}) -%}
 
 cf_snmp:
-  snmp.managed:
+  netsnmp.managed:
     - config: {{device_snmp}}
     - defaults: {{default_snmp}}
