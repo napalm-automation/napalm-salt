@@ -1,0 +1,6 @@
+auto_accept: True # Don't use this in production.
+extension_modules: /srv/salt/ext
+log_level_logfile: debug
+file_roots:
+  base:
+    - /srv/salt

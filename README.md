@@ -392,3 +392,16 @@ Other modules:
 Salt comes with many flavours of modules - complete reference at [https://docs.saltstack.com/en/latest/ref/index.html](https://docs.saltstack.com/en/latest/ref/index.html).
 
 There are few other features, such [reactor](https://docs.saltstack.com/en/latest/topics/reactor/). The reactor system allows you to execute commands after an event happened, based on its output.
+
+Vagrant:
+========
+One can use the included Vagrantfile and saltstack directory to automatically provision a development/testing environment containing a salt
+master/minion/proxy host and a vEOS switch.  To utilize, download the vEOS-lab-4.16.9M.box image from [www.arista.com](www.arista.com), import it, and start up:
+
+```bash
+vagrant box add --name vEOS-lab.4.16.9M vEOS-lab-4.16.9M.box
+vagrant up
+```
+This will build an Ubuntu trusty image with salt-minion and salt-master built from latest git sources, install napalm and capirca, and configure the
+proxy correctly. From there, use `vagrant ssh master` to log into the master and run salt commands.  If desired, the Vagrantfile can be edited prior
+to running `vagrant up` to change the number of hosts created, or use a custom saltstack git repository to test new salt modules.

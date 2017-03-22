@@ -1,0 +1,29 @@
+127.0.0.1   saltmaster.local    saltmaster
+127.0.0.1 localhost
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+192.168.50.10 master
+192.168.50.11 veos1
+192.168.50.12 veos2
+192.168.50.13 veos3
+192.168.50.14 veos4
+192.168.50.15 veos5
+192.168.50.16 veos6
+192.168.50.17 veos7
+192.168.50.18 veos8
+192.168.50.19 veos9
+192.168.50.21 vsrx1
+192.168.50.22 vsrx2
+192.168.50.23 vsrx3
+192.168.50.23 vsrx3
+192.168.50.24 vsrx4
+192.168.50.25 vsrx5
+192.168.50.26 vsrx6
+192.168.50.27 vsrx7
+192.168.50.28 vsrx8
+192.168.50.29 vsrx9
