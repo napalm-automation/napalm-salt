@@ -1,0 +1,9 @@
+master: localhost
+multiprocessing: False
+mine_enabled: True
+log_level_logfile: debug
+
+schedule:
+  napalm_keepalive:
+    function: napalm.reconnect
+    minutes: 1
