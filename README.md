@@ -6,10 +6,25 @@ Salt Basics
 
 New to Salt? Check out [this document](https://docs.saltstack.com/en/latest/topics/tutorials/walkthrough.html) for a brief introduction to get up to speed on the basics.
 
+Test Environment
+================
+
+Throughout the rest of this document, we'll set up a test environment to run some salt commands against routers. This test environment uses a vagrant VM running Ubuntu 16.04, which acts as a salt-master as well as a proxy-master, which establishes and maintains connections to the routers in order to execute commands on them.
+
 Install Salt
 ============
 
-Install Salt using the [platform-specific instructions](https://docs.saltstack.com/en/latest/topics/installation/#platform-specific-installation-instructions) from the official Saltstack documentation.
+The simplest (though most insecure) way to install Salt is via [salt bootstrap](https://docs.saltstack.com/en/latest/topics/tutorials/salt_bootstrap.html). Here's an example of an installation:
+```
+curl -L https://bootstrap.saltstack.com | sudo sh
+```
+
+This will install the `salt-minion` and `salt-proxy` only, but we also want this box to be the `salt-master`, so we'll install that:
+```
+apt-get install salt-master
+```
+
+For more specific installation instructions, see the [platform-specific instructions](https://docs.saltstack.com/en/latest/topics/installation/#platform-specific-installation-instructions) from the official Saltstack documentation.
 Be aware to install the master distribution **from the PPA repo**, as on the local server will run as Master, controlling the devices as Proxy minions.
 
 CentOS documentation can be found [here](centos_installation.md).
@@ -17,73 +32,43 @@ CentOS documentation can be found [here](centos_installation.md).
 Install NAPALM
 ==============
 
-If NAPALM has never been installed on your system it will need to be before napalm-salt can work. The following steps are for an Ubuntu 16.04 installation:
+If NAPALM has never been installed on your system it will need to be before napalm-salt can work:
 ```
-sudo apt-get install libxml2-dev libxslt1-dev zlib1g-dev
-sudo -H pip install napalm
-```
-
-Install NAPALM Salt
-===================
-
-*** NOTE: ***
-If you have Salt >= 2016.11.0, you can skip this section and jump to [&para; Configure Salt Master & Proxy](https://github.com/napalm-automation/napalm-salt#configure-salt-master--proxy). For more details, see: [https://mirceaulinic.net/2016-11-30-salt-carbon-released/](https://mirceaulinic.net/2016-11-30-salt-carbon-released/). If not sure, you can check the Salt version using: ```salt --versions-report```.
-
-Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```.
-
-Extract the SPM archive using the command: ```tar xf napalm-2016.11.spm``` for Salt ```>=2016.3``` or ```tar xf napalm.spm``` for older releases. When unpacking, a directory called ```napalm``` will be created.
-
-Copy all its files and directories to the path specified as ```file_roots``` in the master config file (default is ```/etc/salt/states```), e.g. ```cp -r napalm/* /etc/salt/states```.
-
-At the end, you should have a directory structure similar to the following under the ```file_roots``` directory (e.g.: ```/etc/salt/states```):
-
-```
-/etc/salt/states
-├── top.sls
-├── _proxy
-|   └── napalm.py
-├── _modules
-|   ├── napalm_network.py
-|   ├── napalm_ntp.py
-|   ├── napalm_users.py
-|   ├── napalm_bgp.py
-|   ├── napalm_route.py
-|   ├── napalm_snmp.py
-|   └── napalm_probes.py
-├── _grains
-|   └── napalm.py
-├── _states
-|   ├── netntp.py
-|   ├── netusers.py
-|   ├── netsnmp.py
-|   └── probes.py
-├── _runners
-|   └── ntp.py
-├── router
-    ├── init.sls
-    ├── ntp.sls
-    ├── users.sls
-    ├── snmp.sls
-    └── probes.sls
+sudo apt-get install libffi-dev libssl-dev python-dev python-cffi libxslt1-dev python-pip
+sudo pip install --upgrade cffi
+sudo pip install napalm_base napalm_junos napalm_iosxr napalm_ios
 ```
 
-Configure Salt Master & Proxy
-=============================
 
-There are two configuration files needed to make Salt run as proxy-master: ```master``` and ```proxy```. The files provided as example will configure a default running environment used for the rest of this guide. Place the ```master``` and ```proxy``` files in ```/etc/salt/```. For more specific options, please check the documentation or the comments inside!
+Configure Salt Proxy (and Minion)
+=================================
 
-*** NOTE: ***
-If you do not use the provided ```proxy``` file the following two options are required to be in the ```proxy``` file for the minion to work:
+The main configuration file needed to make Salt run as proxy-master is located at `/etc/salt/proxy`. This file should already exist, though you may need to create it. 
+
+We need to tell the proxy process that the local machine is the `salt-master`, and to turn off multiprocessing. You can add the following to the top of your `/etc/salt/proxy` file: 
 
 ```
 master: localhost
-multiprocessing: False
+multiprocessing: false
+mine_enabled: true # not required, but nice to have
+pki_dir: /etc/salt/pki/proxy # not required - this separates the proxy keys into a different directory
+```
+
+Additionally, you may want to edit the `/etc/salt/minion` file to point the master location to itself. This is not necessary, but it allows you to target the VM as a minion, in addition to the routers. Add this to the top of `/etc/salt/minion`:
+
+```
+master: localhost
 ```
 
 Configure the connection with a device
 ======================================
 
-In ```/etc/salt/pillar/``` save a file called ```top.sls``` with the following content:
+The `master` config file is expecting pillar to be in `/srv/pillar`, but this directory probably doesn't exist, so create it:
+```
+mkdir -p /srv/pillar
+```
+
+Next, we need to create a `top.sls` file in that directory, which tells the salt-master which minions receive which pillar. Create and edit the `/srv/pillar/top.sls` file and make it look like this:
 
 ```yaml
 base:
@@ -100,16 +85,22 @@ Example:
 
 ```yaml
 base:
-  core01.nrt01:
-    - core01_nrt01
+  router1:
+    - router1_pillar
 ```
 
 where:
 
-  - core01.nrt01 is the name used to interact with the device, `salt 'core01.nrt01' test.ping`
-  - ```/etc/salt/pillar/core01_nrt01.sls``` is the file containing the specifications of this device
-
-Then you need to add content in the device descriptor file ```[DEVICE_SLS_FILENAME].sls``` (called _Pillar_):
+  - router1 is the name used to interact with the device: `salt 'router1' test.ping`
+  - `/srv/pillar/router1_pillar.sls` is the file containing the specifications of this device
+  
+Pay attention to this structure: Notice that the `- router1_pillar` portion of the `top.sls` file is missing the `.sls` extension, even though this line is expecting to see a file in the same directory called `router1_pillar.sls`. In addtion, note that there should not be dots used when referencing the `.sls` file, as this will be interpreted as a directory structure. For example, if you had the line configured as `- router1.pillar`, salt would look in the `/srv/pillar` directory for a folder called `router1`, and then for a file in that directory called `pillar.sls`. One last thing - I'm referring to the pillar file as `router1_pillar` in this example to make it explicitly clear that the last line is referencing a pillar file, but it is more common to call the pillar file the name of the device itself, so:
+```yaml
+base:
+  router1:
+    - router1
+```    
+Now that we've referenced this `router1_pillar` file, we need to create it and add the pillar. Create and edit the `/srv/pillar/router1_pillar.sls` file and add the following:
 
 ```yaml
 proxy:
@@ -125,13 +116,13 @@ where:
   - DRIVER is the driver to be used when connecting to the device. For the complete list of supported operating systems, please check the [NAPALM readthedocs page](https://napalm.readthedocs.io/en/latest/#supported-network-operating-systems)
   - HOSTNAME, USERNAME, PASSWORD are the connection details
 
-Example ```core01_nrt01.sls```:
+Example ```router1_pillar.sls```:
 
 ```yaml
 proxy:
   proxytype: napalm
   driver: iosxr
-  host: core01.nrt01
+  host: 192.168.128.128
   username: my_username
   passwd: my_password
 ```
@@ -151,39 +142,16 @@ If the errors persist, run the following lines in a Python console and ask in th
 >>> e.close()
 ```
 
-Running the master as a service
-==============================
 
-To configure the Salt master to run as a service and be easier to manage the process state, create the file ```/etc/systemd/system/salt-master.service``` with the following content:
-
-```
-[Unit]
-Description=Salt Master
-Requires=network.target
-After=network.target
-
-[Service]
-Type=forking
-PIDFile=/var/run/salt-master.pid
-# ***NOTE*** the virtualenv here!  Your location may vary!
-ExecStart=/usr/local/salt/virtualenv/bin/salt-master -d
-Restart=on-failure
-RestartSec=15
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Start the Salt master
+Start the Salt Services
 =======================
 
 ```bash
 systemctl start salt-master
+systemctl restart salt-minion
 ```
 
-Depending on how your salt master is installed the location of the ```salt-master``` binary may need to be changed (the default location is a virtualenv). You should check the location of the binary with the ```which salt-master``` command.
 
-Once the file is created and populated ```systemd``` will need to be reloaded with a ```systemctl daemon-reload``` to pick up the new unit. Do note that there may be an impact to reloading ```systemd``` so be careful.
 
 Running the proxy minion as a service
 =====================================
@@ -197,7 +165,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/salt-proxy -l debug --proxyid %I
+ExecStart=/usr/bin/salt-proxy -l debug --proxyid=%I
 User=root
 Group=root
 Restart=always
@@ -405,3 +373,48 @@ vagrant up
 This will build an Ubuntu trusty image with salt-minion and salt-master built from latest git sources, install napalm and capirca, and configure the
 proxy correctly. From there, use `vagrant ssh master` to log into the master and run salt commands.  If desired, the Vagrantfile can be edited prior
 to running `vagrant up` to change the number of hosts created, or use a custom saltstack git repository to test new salt modules.
+
+
+Legacy NAPALM Salt Installation
+===============================
+
+*** NOTE: ***
+This is for versions of salt older than `2016.11.0`. For more details, see: [https://mirceaulinic.net/2016-11-30-salt-carbon-released/](https://mirceaulinic.net/2016-11-30-salt-carbon-released/). If not sure, you can check the Salt version using: ```salt --versions-report```.
+
+Start by git cloning this repository and changing into the directory: ```git clone https://github.com/napalm-automation/napalm-salt.git && cd napalm-salt```.
+
+Extract the SPM archive using the command: ```tar xf napalm-2016.11.spm``` for Salt ```>=2016.3``` or ```tar xf napalm.spm``` for older releases. When unpacking, a directory called ```napalm``` will be created.
+
+Copy all its files and directories to the path specified as ```file_roots``` in the master config file (default is ```/etc/salt/states```), e.g. ```cp -r napalm/* /etc/salt/states```.
+
+At the end, you should have a directory structure similar to the following under the ```file_roots``` directory (e.g.: ```/etc/salt/states```):
+
+```
+/etc/salt/states
+├── top.sls
+├── _proxy
+|   └── napalm.py
+├── _modules
+|   ├── napalm_network.py
+|   ├── napalm_ntp.py
+|   ├── napalm_users.py
+|   ├── napalm_bgp.py
+|   ├── napalm_route.py
+|   ├── napalm_snmp.py
+|   └── napalm_probes.py
+├── _grains
+|   └── napalm.py
+├── _states
+|   ├── netntp.py
+|   ├── netusers.py
+|   ├── netsnmp.py
+|   └── probes.py
+├── _runners
+|   └── ntp.py
+├── router
+    ├── init.sls
+    ├── ntp.sls
+    ├── users.sls
+    ├── snmp.sls
+    └── probes.sls
+```
