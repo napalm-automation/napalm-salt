@@ -68,6 +68,8 @@ The `master` config file is expecting pillar to be in `/srv/pillar`, but this di
 mkdir -p /srv/pillar
 ```
 
+To configure store the pillars in a different directory, see the [`pillar_roots`](https://docs.saltstack.com/en/latest/ref/configuration/master.html#pillar-roots) (and [`file_roots`](https://docs.saltstack.com/en/latest/ref/configuration/master.html#file-roots)) configuration options in the master configuration file (typically `/etc/salt/master` or `/srv/master` - depending on the operating system).
+
 Next, we need to create a `top.sls` file in that directory, which tells the salt-master which minions receive which pillar. Create and edit the `/srv/pillar/top.sls` file and make it look like this:
 
 ```yaml
@@ -94,7 +96,8 @@ where:
   - router1 is the name used to interact with the device: `salt 'router1' test.ping`
   - `/srv/pillar/router1_pillar.sls` is the file containing the specifications of this device
   
-Pay attention to this structure: Notice that the `- router1_pillar` portion of the `top.sls` file is missing the `.sls` extension, even though this line is expecting to see a file in the same directory called `router1_pillar.sls`. In addtion, note that there should not be dots used when referencing the `.sls` file, as this will be interpreted as a directory structure. For example, if you had the line configured as `- router1.pillar`, salt would look in the `/srv/pillar` directory for a folder called `router1`, and then for a file in that directory called `pillar.sls`. One last thing - I'm referring to the pillar file as `router1_pillar` in this example to make it explicitly clear that the last line is referencing a pillar file, but it is more common to call the pillar file the name of the device itself, so:
+**Pay attention to this structure**: Notice that the `- router1_pillar` portion of the `top.sls` file is missing the `.sls` extension, even though this line is expecting to see a file in the same directory called `router1_pillar.sls`. In addtion, note that there should not be dots used when referencing the `.sls` file, as this will be interpreted as a directory structure. For example, if you had the line configured as `- router1.pillar`, salt would look in the `/srv/pillar` directory for a folder called `router1`, and then for a file in that directory called `pillar.sls`. One last thing - I'm referring to the pillar file as `router1_pillar` in this example to make it explicitly clear that the last line is referencing a pillar file, but it is more common to call the pillar file the name of the device itself, so:
+
 ```yaml
 base:
   router1:
@@ -141,6 +144,27 @@ If the errors persist, run the following lines in a Python console and ask in th
 >>> e.get_facts()
 >>> e.close()
 ```
+
+For additional parameters, one can add them inside the `optional_args` field, e.g.:
+
+
+```yaml
+proxy:
+  proxytype: napalm
+  driver: ios
+  host: 192.168.128.128
+  username: my_username
+  passwd: ''
+  optional_args:
+    secret: sup3rsek3t
+    ssh_config_file: ~/custom_ssh_config_file
+```
+
+See [the list of optional arguments per driver](http://napalm.readthedocs.io/en/develop/support/index.html#list-of-supported-optional-arguments).
+
+When authenticating using SSH key, the field `passwd` (or `password`, `pass`) can be blank, or can be removed from the pillar. However, note that not all drivers use SSH-based authentication. For example, Arista EOS and Cisco Nexus use HTTP-based APIs so the password is mandatory!
+
+For more details regarding the pillar configuration see [the official documentation](https://docs.saltstack.com/en/develop/ref/proxy/all/salt.proxy.napalm.html) and [the network automation reference under Salt docs](https://docs.saltstack.com/en/develop/topics/network_automation/index.html#napalm).
 
 
 Start the Salt Services
