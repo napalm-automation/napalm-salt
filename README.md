@@ -165,7 +165,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/salt-proxy -l debug --proxyid=%I
+ExecStart=/usr/bin/salt-proxy -l debug --proxyid=%i
 User=root
 Group=root
 Restart=always
