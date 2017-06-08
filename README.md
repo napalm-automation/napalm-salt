@@ -36,7 +36,7 @@ If NAPALM has never been installed on your system it will need to be before napa
 ```
 sudo apt-get install libffi-dev libssl-dev python-dev python-cffi libxslt1-dev python-pip
 sudo pip install --upgrade cffi
-sudo pip install napalm_base napalm_junos napalm_iosxr napalm_ios
+sudo pip install napalm-junos napalm-iosxr napalm-ios
 ```
 
 
