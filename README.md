@@ -14,14 +14,17 @@ Throughout the rest of this document, we'll set up a test environment to run som
 Install Salt
 ============
 
-The simplest (though most insecure) way to install Salt is via [salt bootstrap](https://docs.saltstack.com/en/latest/topics/tutorials/salt_bootstrap.html). Here's an example of an installation:
-```
-curl -L https://bootstrap.saltstack.com | sudo sh
+The simplest way to install Salt is via [salt bootstrap](https://docs.saltstack.com/en/latest/topics/tutorials/salt_bootstrap.html). Here's an example of an installation:
+
+```bash
+wget -O bootstrap-salt.sh https://bootstrap.saltstack.com/develop
+sudo sh bootstrap-salt.sh
 ```
 
 This will install the `salt-minion` and `salt-proxy` only, but we also want this box to be the `salt-master`, so we'll install that:
-```
-apt-get install salt-master
+
+```bash
+sudo sh bootstrap-salt.sh -M
 ```
 
 For more specific installation instructions, see the [platform-specific instructions](https://docs.saltstack.com/en/latest/topics/installation/#platform-specific-installation-instructions) from the official Saltstack documentation.
@@ -39,6 +42,7 @@ sudo pip install --upgrade cffi
 sudo pip install napalm-junos napalm-iosxr napalm-ios
 ```
 
+The easy way: Salt users can install NAPALM through a single command, using the [napalm-install Saltstack formula](https://github.com/saltstack-formulas/napalm-install-formula). A more detailed usage example can be found at: https://mirceaulinic.net/2017-07-06-napalm-install-formula/.
 
 Configure Salt Proxy (and Minion)
 =================================
