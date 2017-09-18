@@ -2,4 +2,4 @@ master: localhost
 pki_dir: /etc/salt/pki/proxy
 cachedir: /var/cache/salt/proxy
 multiprocessing: false
-mine_enabled: True
+mine_enabled: true
