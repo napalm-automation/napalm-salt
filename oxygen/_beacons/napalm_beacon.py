@@ -293,7 +293,7 @@ def validate(config):
             return False, 'The match structure for the {} execution function output must be a dictionary'.format(fun)
         if fun not in __salt__:
             return False, 'Execution function {} is not availabe!'.format(fun)
-    return True, 'Valid configuration for the napal beacon!'
+    return True, 'Valid configuration for the napalm beacon!'
 
 
 def beacon(config):
