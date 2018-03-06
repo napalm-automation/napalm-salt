@@ -36,17 +36,12 @@ RUN mkdir /etc/salt/pillar \
     && mkdir /etc/salt/extmods/_output \
     && mkdir /etc/salt/extmods/_runners
 
-## Copy proxy systemd files
-ADD salt-proxy@.service systemd/system/salt-proxy@.service
-
 ## Copy config files and extension modules
 WORKDIR /etc/salt
 ADD master master
 ADD proxy proxy
-ADD nitrogen/_modules/* /etc/salt/extmods/_modules/
-ADD nitrogen/_states/* /etc/salt/extmods/_states/
-ADD nitrogen/_output/* /etc/salt/extmods/_output/
-ADD nitrogen/_runners/* /etc/salt/extmods/_runners/
+ADD oxygen/_modules/* /etc/salt/extmods/_modules/
+ADD oxygen/_beacons/* /etc/salt/extmods/_beacons/
 
 ## Install NAPALM & underlying libraries dependencies
 ## Will install all NAPALM sub-libraries
