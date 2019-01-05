@@ -1,4 +1,4 @@
-FROM napalmautomation/napalm:latest
+FROM debian:stretch
 
 MAINTAINER ping@mirceaulinic.net
 
@@ -14,7 +14,17 @@ RUN apt-get update \
   && wget -O - https://repo.saltstack.com/apt/debian/9/amd64/2017.7/SALTSTACK-GPG-KEY.pub | apt-key add - \
   && apt-get update \
   && apt-get install -y python-zmq \
-                        salt-minion=$version+ds-2 \
+                        salt-master=$version+ds-2 \
   && rm -rf /var/lib/apt/lists/*
 
-COPY ./proxy /etc/salt/proxy
+COPY ./master /etc/salt/master
+
+# Add Run File
+ADD run.sh /usr/local/bin/run.sh
+RUN chmod +x /usr/local/bin/run.sh
+
+# Ports
+EXPOSE 4505 4506
+
+# Run Command
+CMD "/usr/local/bin/run.sh"
