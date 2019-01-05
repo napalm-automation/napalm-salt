@@ -18,6 +18,11 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./master /etc/salt/master
+COPY ./fluorine/_utils/ /etc/salt/_utils/
+COPY ./fluorine/_proxy/ /etc/salt/_proxy/
+COPY ./fluorine/_pillar/ /etc/salt/_pillar/
+COPY ./fluorine/_states/ /etc/salt/_states/
+COPY ./fluorine/_modules/ /etc/salt/_modules/
 
 # Add Run File
 ADD run.sh /usr/local/bin/run.sh
