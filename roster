@@ -1,0 +1,25 @@
+---
+all:
+  children:
+    usa:
+      children:
+        northeast: ~
+        northwest: ~
+        southeast:
+          children:
+            atlanta:
+              hosts:
+                edge1.atlanta:
+                  hostname: e2.atl.south.usa
+                  driver: eos
+                edge2.atlanta:
+                  hostname: e2.atl.south.usa
+            raleigh:
+              hosts:
+                edge1.raleigh:
+                  hostname: e2.rdu.south.usa
+          vars:
+            driver: junos
+            password: pass
+            username: usr
+        southwest: ~

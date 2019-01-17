@@ -466,3 +466,5 @@ pillar_roots:
 # each of Salt's module types such as "runners", "output", "wheel", "modules",
 # "states", "returners", etc.
 # Like 'extension_modules' but can take an array of paths
+
+napalm_roster: ansible
